@@ -5,7 +5,7 @@
 local tabs = {}
 
 -- Tab configuration and state
-local tabList = {"Player", "Collection", "Inventory", "Settings", "Hoops"}  -- Available tabs
+local tabList = {"Player", "Collection", "Inventory", "Hoops"}  -- Available tabs
 local currentTab = 1  -- Index of currently selected tab
 local scrollOffset = 0  -- Vertical scroll offset for tab list
 local isDragging = false  -- Whether user is dragging to scroll tabs
@@ -18,7 +18,7 @@ local pressedTab = nil
 -- Draw the tab interface with visual styling
 -- panelX, panelY: Position of the tab panel
 -- panelWidth, panelHeight: Dimensions of the tab panel
-function tabs.draw(panelX, panelY, panelWidth, panelHeight)
+function tabs.draw(panelX, panelY, panelWidth, panelHeight, showingSettings)
     local tabHeight = 60  -- Height of each individual tab
     local padding = 10  -- Padding around tabs
     
@@ -28,7 +28,7 @@ function tabs.draw(panelX, panelY, panelWidth, panelHeight)
     -- Draw each tab in the list
     for i, tabName in ipairs(tabList) do
         local tabY = panelY + (i - 1) * tabHeight + scrollOffset  -- Calculate vertical position with scroll offset
-        local isSelected = i == currentTab  -- Check if this is the currently selected tab
+        local isSelected = i == currentTab and not (showingSettings or false)  -- Check if this is the currently selected tab (unless settings are shown)
         local isPressed = i == pressedTab  -- Check if this tab is currently being pressed
         
         -- Only draw tabs that are visible within the panel bounds

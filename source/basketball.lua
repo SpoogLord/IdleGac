@@ -44,6 +44,22 @@ function basketball:init()
     self.hoop.y = math.random(minHeight, maxHeight)  -- Random vertical position
     self.hoop.width = 80  -- Width of the hoop
     self.hoop.height = 5  -- Height of the hoop
+    
+    -- Initialize backboard properties
+    self.backboard = {}
+    self.backboard.width = 100  -- Width of the backboard (slimmer)
+    self.backboard.height = 70  -- Height of the backboard (slimmer)
+    self.backboard.thickness = 8  -- Thickness of the backboard (slimmer)
+    -- Position the backboard to the right of the hoop
+    self.backboard.x = self.hoop.x + self.hoop.width  -- Right side of the hoop
+    self.backboard.y = self.hoop.y - self.backboard.height / 2 - 10  -- Center the backboard vertically with the hoop and raise 10px
+    
+    -- Initialize wall properties
+    self.wall = {}
+    self.wall.x = self.courtWidth / 2 - 5  -- Center minus half wall width (5 pixels from center)
+    self.wall.width = 10  -- Width of the wall obstacle
+    self.wall.height = self.courtHeight / 2  -- Height of the wall (half the court)
+    self.wall.y = self.courtHeight - self.wall.height  -- Wall starts from bottom and goes up halfway
     self.active = true  -- Enable the game
     self.score = 0  -- Initialize score counter
     self.shots = 0  -- Initialize shot counter
@@ -92,6 +108,16 @@ function basketball:resetBallAndHoop()
     local minHeight = 200  -- 
     local maxHeight = 500  -- 
     self.hoop.y = math.random(minHeight, maxHeight)
+    -- Position the backboard to the right of the hoop
+    self.backboard.x = self.hoop.x + self.hoop.width  -- Right side of the hoop
+    self.backboard.y = self.hoop.y - self.backboard.height / 2 - 10  -- Center the backboard vertically with the hoop and raise 10px
+    
+    -- Reset wall properties (these don't change with hoop position, but let's recalculate to be safe)
+    self.wall.x = self.courtWidth / 2 - 5  -- Center minus half wall width (5 pixels from center)
+    self.wall.width = 10  -- Width of the wall obstacle
+    self.wall.height = self.courtHeight / 2  -- Height of the wall (half the court)
+    self.wall.y = self.courtHeight - self.wall.height  -- Wall starts from bottom and goes up halfway
+    
     -- Reset hoop tracking
     self.prevBallYRelativeToHoop = self.ball.y - self.hoop.y
 end
@@ -175,6 +201,11 @@ function basketball:update(dt)
         -- Check for collisions with middle wall and handle appropriately
         if self:checkWallCollision() then
             self:handleWallCollision()
+        end
+        
+        -- Check for collisions with backboard
+        if self:checkBackboardCollision() then
+            self:handleBackboardCollision()
         end
         
         -- Check for collisions with rim edges (creates 3D hoop effect)
@@ -288,6 +319,11 @@ function basketball:update(dt)
             self:handleWallCollision()
         end
         
+        -- Check for and prevent dragging through backboard
+        if self:checkBackboardCollision() then
+            self:handleBackboardCollision()
+        end
+        
         -- Check for and prevent dragging through rim edges (3D hoop effect)
         -- This ensures the ball doesn't pass through the hoop edges while dragging
         local hasRimCollision, rimSide = self:checkRimEdgeCollision()
@@ -344,10 +380,10 @@ end
 function basketball:checkWallCollision()
     -- Check if ball is within middle wall boundaries
     -- This function detects when the ball collides with the center wall obstacle
-    local wallX = self.courtWidth / 2 - 5  -- Center minus half wall width (5 pixels from center)
-    local wallWidth = 10  -- Width of the wall obstacle
-    local wallHeight = self.courtHeight / 2  -- Height of the wall (half the court)
-    local wallY = self.courtHeight - wallHeight  -- Wall starts from bottom and goes up halfway
+    local wallX = self.wall.x
+    local wallWidth = self.wall.width
+    local wallHeight = self.wall.height
+    local wallY = self.wall.y
     
     -- Calculate ball boundaries for collision detection
     local ballLeft = self.ball.x - self.ballRadius  -- Left edge of ball
@@ -367,10 +403,10 @@ function basketball:handleWallCollision()
     -- Handle collision response for middle wall collisions
     -- This function responds to collisions with the middle wall obstacle
     -- Calculate wall boundaries
-    local wallX = self.courtWidth / 2 - 5  -- Left edge of wall (center minus half width)
-    local wallWidth = 10  -- Width of wall
-    local wallHeight = self.courtHeight / 2  -- Height of wall (half court)
-    local wallY = self.courtHeight - wallHeight  -- Top of wall (from bottom up)
+    local wallX = self.wall.x
+    local wallWidth = self.wall.width
+    local wallHeight = self.wall.height
+    local wallY = self.wall.y
     
     -- Determine collision side and respond accordingly
     local ballLeft = self.ball.x - self.ballRadius  -- Left edge of ball
@@ -385,14 +421,16 @@ function basketball:handleWallCollision()
     local penBottom = (wallY + wallHeight - ballTop)  -- Penetration from the bottom side of wall
     
     -- Check collision from left side of wall (ball moving right, hits right side of wall)
-    if self.ball.velocityX > 0 and ballRight > wallX and ballBottom > wallY and ballTop < wallY + wallHeight then
+    -- Only allow side collision when the ball is below the top surface of the wall
+    if self.ball.velocityX > 0 and ballRight > wallX and ballBottom > wallY and ballTop >= wallY and ballTop < wallY + wallHeight then
         -- Only push out if ball is actually penetrating
         if penLeft > 0 then
             self.ball.x = wallX - self.ballRadius  -- Position ball to the left of wall
         end
         self.ball.velocityX = -math.abs(self.ball.velocityX) * 0.7  -- Bounce with energy loss (reverse horizontal velocity)
     -- Check collision from right side of wall (ball moving left, hits left side of wall)
-    elseif self.ball.velocityX < 0 and ballLeft < wallX + wallWidth and ballBottom > wallY and ballTop < wallY + wallHeight then
+    -- Only allow side collision when the ball is below the top surface of the wall
+    elseif self.ball.velocityX < 0 and ballLeft < wallX + wallWidth and ballBottom > wallY and ballTop >= wallY and ballTop < wallY + wallHeight then
         -- Only push out if ball is actually penetrating
         if penRight > 0 then
             self.ball.x = wallX + wallWidth + self.ballRadius  -- Position ball to the right of wall
@@ -410,8 +448,8 @@ function basketball:handleWallCollision()
     elseif self.ball.velocityY > 0 and ballBottom > wallY and ballTop < wallY and
            ballRight > wallX and ballLeft < wallX + wallWidth then
         -- Only push out if ball is actually penetrating
-        if penBottom > 0 then
-            self.ball.y = wallY + wallHeight + self.ballRadius  -- Position ball below wall
+        if penTop > 0 then
+            self.ball.y = wallY - self.ballRadius  -- Position ball above wall (corrected)
         end
         self.ball.velocityY = -math.abs(self.ball.velocityY) * 0.7  -- Bounce with energy loss (reverse vertical velocity)
     end
@@ -455,13 +493,6 @@ function basketball:checkRimEdgeCollision()
         return true, "left_front"  -- Collision detected with left front edge
     end
     
-    -- Check for collision with right back edge, pushes ball left
-    if self.ball.velocityX > 0 and  -- Ball moving right (hitting back of right side)
-       ballLeft < rightBackColliderX + collisionWidth and ballRight > rightBackColliderX and
-       ballBottom > rightBackColliderY and ballTop < rightBackColliderY + collisionHeight then
-        return true, "right_back"  -- Collision detected with right back edge
-    end
-    
     return false, nil  -- No collision detected
 end
 
@@ -472,11 +503,88 @@ function basketball:handleRimEdgeCollision(edgeSide)
         -- Collision with front of left edge - push ball to the left
         self.ball.x = self.hoop.x - self.ballRadius  -- Position ball to the left of the rim
         self.ball.velocityX = -math.abs(self.ball.velocityX) * 0.7  -- Bounce with energy loss (push left)
-    elseif edgeSide == "right_back" then
-        -- Collision with back of right edge - push ball to the left
-        self.ball.x = self.hoop.x + self.hoop.width - self.ballRadius  -- Position ball to the left of the right edge
-        self.ball.velocityX = -math.abs(self.ball.velocityX) * 0.7  -- Bounce with energy loss (push left)
     end
+end
+
+function basketball:checkBackboardCollision()
+    -- Check for collisions with backboard
+    -- This function detects when the ball hits the backboard
+    local ballLeft = self.ball.x - self.ballRadius  -- Left edge of ball
+    local ballRight = self.ball.x + self.ballRadius  -- Right edge of ball
+    local ballTop = self.ball.y - self.ballRadius  -- Top edge of ball
+    local ballBottom = self.ball.y + self.ballRadius  -- Bottom edge of ball
+    
+    local boardLeft = self.backboard.x  -- Left edge of backboard
+    local boardRight = self.backboard.x + self.backboard.thickness  -- Right edge of backboard
+    local boardTop = self.backboard.y  -- Top edge of backboard
+    local boardBottom = self.backboard.y + self.backboard.height  -- Bottom edge of backboard
+    
+    -- Check if ball intersects with backboard rectangle
+    if ballRight > boardLeft and ballLeft < boardRight and 
+       ballBottom > boardTop and ballTop < boardBottom then
+        return true  -- Collision detected with backboard
+    end
+    return false  -- No collision with backboard
+end
+
+function basketball:handleBackboardCollision()
+    -- Handle collision response for backboard collisions
+    -- This function responds to collisions with the backboard
+    local ballLeft = self.ball.x - self.ballRadius  -- Left edge of ball
+    local ballRight = self.ball.x + self.ballRadius  -- Right edge of ball
+    local ballTop = self.ball.y - self.ballRadius  -- Top edge of ball
+    local ballBottom = self.ball.y + self.ballRadius  -- Bottom edge of ball
+    
+    local boardLeft = self.backboard.x  -- Left edge of backboard
+    local boardRight = self.backboard.x + self.backboard.thickness  -- Right edge of backboard
+    local boardTop = self.backboard.y  -- Top edge of backboard
+    local boardBottom = self.backboard.y + self.backboard.height  -- Bottom edge of backboard
+    
+    -- Calculate penetration depths for each side
+    local penLeft = (ballRight - boardLeft)  -- Penetration from the left side of backboard
+    local penRight = (boardRight - ballLeft)  -- Penetration from the right side of backboard
+    local penTop = (ballBottom - boardTop)  -- Penetration from the top side of backboard
+    local penBottom = (boardBottom - ballTop)  -- Penetration from the bottom side of backboard
+    
+    -- Determine collision side based on velocity and penetration depth
+    if self.ball.velocityX > 0 and ballRight > boardLeft and ballBottom > boardTop and ballTop < boardBottom then
+        -- Collision from the left side of backboard (ball moving right)
+        -- Only push out if ball is actually penetrating
+        if penLeft > 0 then
+            self.ball.x = boardLeft - self.ballRadius  -- Position ball to the left of backboard
+        end
+        self.ball.velocityX = -math.abs(self.ball.velocityX) * 0.7  -- Bounce with energy loss (reverse horizontal velocity)
+        -- Add some vertical variation to the bounce for realism
+        self.ball.velocityY = self.ball.velocityY + (math.random() - 0.5) * 50
+    elseif self.ball.velocityX < 0 and ballLeft < boardRight and ballBottom > boardTop and ballTop < boardBottom then
+        -- Collision from the right side of backboard (ball moving left)
+        -- Only push out if ball is actually penetrating
+        if penRight > 0 then
+            self.ball.x = boardRight + self.ballRadius  -- Position ball to the right of backboard
+        end
+        self.ball.velocityX = math.abs(self.ball.velocityX) * 0.7  -- Bounce with energy loss (reverse horizontal velocity)
+        -- Add some vertical variation to the bounce for realism
+        self.ball.velocityY = self.ball.velocityY + (math.random() - 0.5) * 50
+    elseif self.ball.velocityY > 0 and ballBottom > boardTop and ballTop < boardBottom and
+           ballRight > boardLeft and ballLeft < boardRight then
+        -- Collision from the top of backboard (ball moving down)
+        -- Only push out if ball is actually penetrating
+        if penTop > 0 then
+            self.ball.y = boardTop - self.ballRadius  -- Position ball above backboard
+        end
+        self.ball.velocityY = -math.abs(self.ball.velocityY) * 0.7  -- Bounce with energy loss (reverse vertical velocity)
+    elseif self.ball.velocityY < 0 and ballTop < boardBottom and ballBottom > boardBottom and
+           ballRight > boardLeft and ballLeft < boardRight then
+        -- Collision from the bottom of backboard (ball moving up)
+        -- Only push out if ball is actually penetrating
+        if penBottom > 0 then
+            self.ball.y = boardBottom + self.ballRadius  -- Position ball below backboard
+        end
+        self.ball.velocityY = math.abs(self.ball.velocityY) * 0.7  -- Bounce with energy loss (reverse vertical velocity)
+    end
+    
+    -- Add rotation based on the collision for a more realistic effect
+    self.ball.rotationSpeed = self.ball.velocityX * 0.05
 end
 
 function basketball:makeScore()
@@ -611,11 +719,8 @@ function basketball:draw(panelX, panelY, panelWidth, panelHeight)
     
     -- Draw middle wall (from bottom halfway to top)
     -- This is an obstacle that the ball must navigate around
-    local wallX = self.courtWidth / 2 - 5  -- Center minus half wall width
-    local wallWidth = 10  -- Width of the wall
-    local wallHeight = self.courtHeight / 2  -- Height (half the court)
     love.graphics.setColor(0.6, 0.6, 0.6)  -- Gray wall color
-    love.graphics.rectangle("fill", wallX, self.courtHeight - wallHeight, wallWidth, wallHeight)  -- Draw wall
+    love.graphics.rectangle("fill", self.wall.x, self.wall.y, self.wall.width, self.wall.height)  -- Draw wall
     -- Reset color to white for other elements
     love.graphics.setColor(1, 1, 1)
     
@@ -641,6 +746,13 @@ function basketball:draw(panelX, panelY, panelWidth, panelHeight)
                           scale,  -- x scale (width scaling)
                           scale)  -- y scale (height scaling, maintains 1:1 aspect ratio, scaled to match hoop width)
     end
+    
+    -- Draw backboard on the right side of the hoop
+    love.graphics.setColor(1, 1, 1)  -- Solid white color for backboard
+    love.graphics.rectangle("fill", self.backboard.x, self.backboard.y, self.backboard.thickness, self.backboard.height)
+    -- No border as requested
+    -- Reset color to white
+    love.graphics.setColor(1, 1, 1)
     
 
     
@@ -681,9 +793,13 @@ function basketball:draw(panelX, panelY, panelWidth, panelHeight)
         local leftFrontColliderX = self.hoop.x - collisionWidth  -- Positioned to the left of hoop
         love.graphics.rectangle("line", leftFrontColliderX, collisionY, collisionWidth, collisionHeight)  -- Draw box
         
-        -- Visualize right back collider
-        local rightBackColliderX = self.hoop.x + self.hoop.width - collisionWidth  -- Positioned to the right of hoop
-        love.graphics.rectangle("line", rightBackColliderX, collisionY, collisionWidth, collisionHeight)  -- Draw box
+
+        
+        -- Visualize backboard collider
+        love.graphics.rectangle("line", self.backboard.x, self.backboard.y, self.backboard.thickness, self.backboard.height)  -- Draw box
+        
+        -- Visualize wall collider
+        love.graphics.rectangle("line", self.wall.x, self.wall.y, self.wall.width, self.wall.height)  -- Draw box
     end
     
     love.graphics.pop()  -- Restore previous graphics state

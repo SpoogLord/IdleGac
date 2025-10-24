@@ -5,7 +5,7 @@ assets.videos = {}
 
 function assets.load()
     assets.images.startupDog = love.graphics.newImage('assets/startup_dog.png')
-    assets.images.settingsIcon = love.graphics.newImage('assets/settings_icon.png')
+    assets.images.settingsIcon = love.graphics.newImage('assets/settings.png')
     assets.images.checkboxEnabled = love.graphics.newImage('assets/checkbox_enabled.png')
     assets.images.checkboxDisabled = love.graphics.newImage('assets/checkbox_disabled.png')
     assets.images.closeButton = love.graphics.newImage('assets/close_button.png')

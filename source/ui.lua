@@ -19,6 +19,12 @@ local lastKey = nil
 local namePromptActive = false
 local sliderDragging = false
 
+-- Debug dropdown and input state variables
+local debugCharacterDropdown = { selected = 1 }
+local debugMaterialDropdown = { selected = 1 }
+local debugInputActive = false
+local debugQuantityInput = "10"
+
 
 
 -- Callback storage
@@ -291,7 +297,7 @@ function ui.drawMiddlePanel(panelX, panelY, panelWidth, panelHeight, currentTab,
     if currentTab == "Player" then
         ui.drawPlayerPanel(panelX, panelY, panelWidth, panelHeight)
     elseif currentTab == "Settings" then
-        ui.drawSettingsPanel(panelX, panelY, panelWidth, panelHeight, settings, gachaSpeed, assets)
+        ui.drawSettingsPanel(panelX, panelY, panelWidth, panelHeight)
     elseif currentTab == "Collection" then
         require('source.collection').draw(panelX, panelY, panelWidth, panelHeight)
     elseif currentTab == "Inventory" then
@@ -348,37 +354,7 @@ function ui.drawSettingsPanel(panelX, panelY, panelWidth, panelHeight, settings,
     love.graphics.print("Show FPS counter", panelX + padding + checkboxSize + 10, y + 4)
     y = y + 50
     
-    -- Gacha speed slider
-    love.graphics.print("Gacha Speed: " .. string.format("%.1f", gachaSpeed), panelX + padding, y)
-    y = y + 25
-    
-    local sliderW = panelWidth - padding * 2
-    local sliderH = 20
-    
-    love.graphics.setColor(0.3, 0.3, 0.3, 1)
-    love.graphics.rectangle("fill", panelX + padding, y, sliderW, sliderH)
-    
-    local handlePos = (gachaSpeed - 0.1) / (50.0 - 0.1) * sliderW
-    love.graphics.setColor(whiteColor)
-    love.graphics.rectangle("fill", panelX + padding + handlePos - 5, y - 2, 10, sliderH + 4)
-    
-    -- Reset button above gacha speed slider
-    local resetButtonW = 40
-    local resetButtonH = 20
-    local resetButtonX = panelX + padding + sliderW - resetButtonW
-    local resetButtonY = y - 25
-    
-
-    
-    love.graphics.setColor(0.4, 0.4, 0.4, 1)
-    love.graphics.rectangle("fill", resetButtonX, resetButtonY, resetButtonW, resetButtonH)
-    love.graphics.setColor(whiteColor)
-    love.graphics.rectangle("line", resetButtonX, resetButtonY, resetButtonW, resetButtonH)
-    
-    local resetText = "Reset"
-    local textWidth = love.graphics.getFont():getWidth(resetText)
-    local textHeight = love.graphics.getFont():getHeight()
-    love.graphics.print(resetText, resetButtonX + (resetButtonW - textWidth) / 2, resetButtonY + (resetButtonH - textHeight) / 2)
+    -- Gacha speed slider - moved to debug section
 
     -- Debug menu toggle
     y = y + 50
@@ -474,6 +450,38 @@ function ui.drawSettingsPanel(panelX, panelY, panelWidth, panelHeight, settings,
         
         y = y + 40
         
+        -- Gacha speed slider
+        love.graphics.print("Gacha Speed: " .. string.format("%.1f", gachaSpeed), panelX + padding, y)
+        y = y + 25
+        
+        local sliderW = panelWidth - padding * 2
+        local sliderH = 20
+        
+        love.graphics.setColor(0.3, 0.3, 0.3, 1)
+        love.graphics.rectangle("fill", panelX + padding, y, sliderW, sliderH)
+        
+        local handlePos = (gachaSpeed - 0.1) / (50.0 - 0.1) * sliderW
+        love.graphics.setColor(whiteColor)
+        love.graphics.rectangle("fill", panelX + padding + handlePos - 5, y - 2, 10, sliderH + 4)
+        
+        -- Reset button above gacha speed slider
+        local resetButtonW = 40
+        local resetButtonH = 20
+        local resetButtonX = panelX + padding + sliderW - resetButtonW
+        local resetButtonY = y - 25
+        
+        love.graphics.setColor(0.4, 0.4, 0.4, 1)
+        love.graphics.rectangle("fill", resetButtonX, resetButtonY, resetButtonW, resetButtonH)
+        love.graphics.setColor(whiteColor)
+        love.graphics.rectangle("line", resetButtonX, resetButtonY, resetButtonW, resetButtonH)
+        
+        local resetText = "Reset"
+        local textWidth = love.graphics.getFont():getWidth(resetText)
+        local textHeight = love.graphics.getFont():getHeight()
+        love.graphics.print(resetText, resetButtonX + (resetButtonW - textWidth) / 2, resetButtonY + (resetButtonH - textHeight) / 2)
+        
+        y = y + 50  -- Add space after slider
+        
         -- Add character button
         local addCharButtonX = panelX + padding
         local addCharButtonY = y
@@ -547,14 +555,184 @@ function ui.handleSettingsClick(x, y, panelX, panelY, panelWidth, panelHeight, g
         return true
     end
     
-    -- Gacha speed slider click
-    if ui.pointInRect(x, y, panelX + padding, sliderY - 2, sliderW, 24) then
-        sliderDragging = true
-        local newSpeed = 0.1 + ((x - panelX - padding) / sliderW) * (50.0 - 0.1)
-        newSpeed = math.max(0.1, math.min(50.0, newSpeed))
-        newSpeed = math.floor(newSpeed * 10 + 0.5) / 10
-        gameState.gachaSpeed = newSpeed
+    -- Debug menu toggle button click (calculated based on visual position after gacha slider section)
+    -- Visual: after fps checkbox (y + 40 + 40) + spacing (50) + gacha text (25) + spacing (50) + debug text (25)
+    local debugButtonY = panelY + padding + 40 + 40 + 50 + 25 + 50 + 25  -- = panelY + padding + 230
+    local debugButtonW = 80
+    local debugButtonH = 25
+    local debugButtonX = panelX + padding
+    
+    if ui.pointInRect(x, y, debugButtonX, debugButtonY, debugButtonW, debugButtonH) then
+        -- Toggle debug mode
+        local debugModule = require('source.debug')
+        debugModule.toggleDebugMode()
         return true
+    end
+    
+
+    
+    -- Debug menu toggle button click
+    local debugButtonY = sliderY + 50 + 25  -- y after slider + 50 (y = y + 50) + 25 (y = y + 25)
+    local debugButtonW = 80
+    local debugButtonH = 25
+    local debugButtonX = panelX + padding
+    
+    if ui.pointInRect(x, y, debugButtonX, debugButtonY, debugButtonW, debugButtonH) then
+        -- Toggle debug mode
+        local debugModule = require('source.debug')
+        debugModule.toggleDebugMode()
+        return true
+    end
+    
+    -- Only process other debug UI elements if debug is enabled
+    local debugMenuEnabled = require('source.debug').isEnabled()
+    if debugMenuEnabled then
+        -- Character dropdown click
+        local dropdownY = debugButtonY + 35  -- y position after debug button
+        local dropdownW = 200
+        local dropdownH = 30
+        local dropdownX = panelX + padding
+        
+        if ui.pointInRect(x, y, dropdownX, dropdownY, dropdownW, dropdownH) then
+            -- For now, just toggle dropdown state or handle selection
+            -- This would typically open a dropdown menu, but for simplicity we'll just cycle through options
+            local charactersModule = require('source.characters')
+            local allCharacters = charactersModule.getSortedCharacters()
+            if #allCharacters > 0 then
+                debugCharacterDropdown.selected = (debugCharacterDropdown.selected % #allCharacters) + 1
+            end
+            return true
+        end
+        
+        -- Material dropdown click
+        local materialDropdownY = dropdownY + 40
+        if ui.pointInRect(x, y, dropdownX, materialDropdownY, dropdownW, dropdownH) then
+            -- Cycle through material options
+            local inventoryModule = require('source.inventory')
+            local allMaterials = inventoryModule.getMaterials()
+            if #allMaterials > 0 then
+                debugMaterialDropdown.selected = (debugMaterialDropdown.selected % #allMaterials) + 1
+            end
+            return true
+        end
+        
+        -- Quantity input click
+        local inputY = materialDropdownY + 40
+        local inputW = 100
+        local inputH = 30
+        local inputX = panelX + padding
+        
+        if ui.pointInRect(x, y, inputX, inputY, inputW, inputH) then
+            debugInputActive = true
+            return true
+        else
+            -- If clicked outside input, deactivate it
+            if debugInputActive then
+                debugInputActive = false
+            end
+        end
+        
+        -- Add character button click
+        local addCharButtonY = inputY + 40
+        local addCharButtonW = 120
+        local addCharButtonH = 30
+        local addCharButtonX = panelX + padding
+        
+        if ui.pointInRect(x, y, addCharButtonX, addCharButtonY, addCharButtonW, addCharButtonH) then
+            -- Add selected character for debugging
+            local charactersModule = require('source.characters')
+            local allCharacters = charactersModule.getSortedCharacters()
+            if allCharacters[debugCharacterDropdown.selected] then
+                local selectedChar = allCharacters[debugCharacterDropdown.selected]
+                if not gameState.characters then
+                    gameState.characters = {}
+                end
+                local charId = tostring(selectedChar.id)
+                gameState.characters[charId] = (gameState.characters[charId] or 0) + 1
+                local charInfo = charactersModule.getCharacterInfo(selectedChar.id)
+                local charName = charInfo and charInfo.name or "Unknown"
+                print("Added character: " .. charName)
+                local eventLog = require('source.eventlog')
+                eventLog.addEntry("Debug: Added " .. charName)
+            end
+            return true
+        end
+        
+        -- Gacha speed slider
+        local gachaSpeedSliderY = inputY + 40  -- Position after input field
+        local gachaSpeedSliderYActual = gachaSpeedSliderY + 25  -- Actual slider position (text + 25)
+        local gachaSpeedSliderW = panelWidth - padding * 2
+        local gachaSpeedSliderH = 24
+        local gachaSpeedSliderX = panelX + padding
+        
+        if ui.pointInRect(x, y, gachaSpeedSliderX, gachaSpeedSliderYActual - 2, gachaSpeedSliderW, gachaSpeedSliderH) then
+            sliderDragging = true
+            local newSpeed = 0.1 + ((x - panelX - padding) / gachaSpeedSliderW) * (50.0 - 0.1)
+            newSpeed = math.max(0.1, math.min(50.0, newSpeed))
+            newSpeed = math.floor(newSpeed * 10 + 0.5) / 10
+            gameState.gachaSpeed = newSpeed
+            local eventLog = require('source.eventlog')
+            eventLog.addEntry("Debug: Gacha speed changed to " .. string.format("%.1f", newSpeed))
+            return true
+        end
+        
+        -- Reset gacha speed button click (above the slider)
+        local resetButtonW = 40
+        local resetButtonH = 20
+        local resetButtonX = panelX + padding + gachaSpeedSliderW - resetButtonW
+        local resetButtonY = gachaSpeedSliderY  -- At the same level as gacha speed text (above the slider visual)
+        
+        if ui.pointInRect(x, y, resetButtonX, resetButtonY, resetButtonW, resetButtonH) then
+            gameState.gachaSpeed = 1.0
+            local eventLog = require('source.eventlog')
+            eventLog.addEntry("Debug: Gacha speed reset to 1.0")
+            return true
+        end
+        
+        -- Add character button click (position after slider section + space)
+        local addCharButtonY = gachaSpeedSliderYActual + 50  -- Position after slider and space
+        local addCharButtonW = 120
+        local addCharButtonH = 30
+        local addCharButtonX = panelX + padding
+        
+        if ui.pointInRect(x, y, addCharButtonX, addCharButtonY, addCharButtonW, addCharButtonH) then
+            -- Add selected character for debugging
+            local charactersModule = require('source.characters')
+            local allCharacters = charactersModule.getSortedCharacters()
+            if allCharacters[debugCharacterDropdown.selected] then
+                local selectedChar = allCharacters[debugCharacterDropdown.selected]
+                if not gameState.characters then
+                    gameState.characters = {}
+                end
+                local charId = tostring(selectedChar.id)
+                gameState.characters[charId] = (gameState.characters[charId] or 0) + 1
+                local charInfo = charactersModule.getCharacterInfo(selectedChar.id)
+                local charName = charInfo and charInfo.name or "Unknown"
+                print("Added character: " .. charName)
+                local eventLog = require('source.eventlog')
+                eventLog.addEntry("Debug: Added " .. charName)
+            end
+            return true
+        end
+        
+        -- Add material button click
+        local addMatButtonX = panelX + padding + 130
+        local addMatButtonY = addCharButtonY
+        
+        if ui.pointInRect(x, y, addMatButtonX, addMatButtonY, addCharButtonW, addCharButtonH) then
+            -- Add selected material for debugging
+            local inventoryModule = require('source.inventory')
+            local allMaterials = inventoryModule.getMaterials()
+            if allMaterials[debugMaterialDropdown.selected] then
+                local selectedMaterial = allMaterials[debugMaterialDropdown.selected]
+                local quantity = tonumber(debugQuantityInput) or 10
+                inventoryModule.addItem(selectedMaterial.id, quantity)
+                print("Added material: " .. selectedMaterial.name .. " (x" .. quantity .. ")")
+                local eventLog = require('source.eventlog')
+                eventLog.addEntry("Debug: Added " .. selectedMaterial.name .. " (x" .. quantity .. ")")
+            end
+            return true
+        end
     end
     
 
@@ -700,10 +878,16 @@ function ui.logout()
     end
 end
 
+-- Set the text input active state
+-- Used to enable/disable text input for save name editing
+-- active: Boolean indicating whether text input should be active
 function ui.setTextInputActive(active)
     ui.textInputActive = active
 end
 
+-- Check if text input is currently active
+-- Used to determine if save name editing is in progress
+-- Returns true if text input is active, false otherwise
 function ui.isTextInputActive()
     return ui.textInputActive
 end
@@ -715,6 +899,9 @@ function ui.handleTextInput(text)
     end
 end
 
+-- Update UI systems each frame
+-- Handles key repeat for backspace in text inputs
+-- dt: Delta time since last frame
 function ui.update(dt)
     if lastKey == "backspace" and love.keyboard.isDown("backspace") then
         keyHoldTime = keyHoldTime + dt
@@ -732,6 +919,9 @@ function ui.update(dt)
     end
 end
 
+-- Handle keyboard input for UI elements
+-- Processes special keys like backspace, return, and escape in text inputs
+-- key: The key that was pressed
 function ui.handleKeyPressed(key)
     if ui.textInputActive then
         if key == "backspace" and gameState.saveName and #gameState.saveName > 0 then
@@ -860,6 +1050,10 @@ function ui.handleSettingsMouseMoved(x, y, panelX, panelY, panelWidth, panelHeig
         newSpeed = math.max(0.1, math.min(50.0, newSpeed))
         newSpeed = math.floor(newSpeed * 10 + 0.5) / 10
         gameState.gachaSpeed = newSpeed
+        -- Log gacha speed change if debug mode is enabled
+        if require('source.debug').isEnabled() and addLogEntry then
+            addLogEntry("Debug: Gacha speed changed to " .. string.format("%.1f", newSpeed))
+        end
     end
 end
 
@@ -895,6 +1089,12 @@ function ui.handleKeyPressed(key)
     end
 end
 
+-- Check if point is inside rectangle bounds
+-- Used throughout UI system for click detection
+-- x, y: Point coordinates to test
+-- rx, ry: Rectangle top-left corner coordinates
+-- rw, rh: Rectangle width and height
+-- Returns true if point is inside rectangle, false otherwise
 function ui.pointInRect(x, y, rx, ry, rw, rh)
     return x >= rx and x <= rx + rw and y >= ry and y <= ry + rh
 end

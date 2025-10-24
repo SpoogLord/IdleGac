@@ -181,8 +181,12 @@ local function drawGameInterface(screenW, screenH)
     EventLog.draw(logX, logY, logWidth, logActualHeight)
     
     -- Draw panel contents
-    Tabs.draw(0, 0, leftPanelWidth, topLeftHeight)
-    UI.drawMiddlePanel(leftPanelWidth, 0, middlePanelWidth, screenH, Tabs.getCurrentTab())
+    Tabs.draw(0, 0, leftPanelWidth, topLeftHeight, gameState.showingSettings)
+    if gameState.showingSettings then
+        UI.drawMiddlePanel(leftPanelWidth, 0, middlePanelWidth, screenH, "Settings", Settings.settings, gameState.gachaSpeed, Assets)
+    else
+        UI.drawMiddlePanel(leftPanelWidth, 0, middlePanelWidth, screenH, Tabs.getCurrentTab())
+    end
     UI.drawGamePanels(screenW, screenH, Animation.getCurrentFrame(), Animation.getProgress(), rightPanelX, rightPanelWidth, animationHeight)
     
     -- Draw UI overlays
@@ -209,43 +213,31 @@ local function drawGameInterface(screenW, screenH)
         love.graphics.print(fpsText, screenW - fpsWidth - 10, screenH - 20)
     end
     
-    -- Draw Linktree button in bottom left panel
+    -- Draw Linktree and Settings buttons in bottom left panel
     local bottomLeftPanelX = 0
     local bottomLeftPanelY = topLeftHeight
     local bottomLeftPanelWidth = leftPanelWidth
     local bottomLeftPanelHeight = bottomLeftHeight
     
-    -- Draw the Linktree button image stretched to almost cover the panel
+    -- Calculate button size for 1:1 aspect ratio
+    local buttonSize = bottomLeftPanelHeight - 10  -- Size to fit within the panel with padding
+    
+    -- Draw Settings button (left-aligned)
+    if Assets.images.settingsIcon then
+        local settingsButtonX = bottomLeftPanelX + 5  -- Left padding
+        local settingsButtonY = bottomLeftPanelY + 5  -- Top padding
+        local settingsScale = buttonSize / Assets.images.settingsIcon:getWidth()  -- Maintain 1:1 aspect ratio
+        
+        love.graphics.draw(Assets.images.settingsIcon, settingsButtonX, settingsButtonY, 0, settingsScale, settingsScale)
+    end
+    
+    -- Draw Linktree button (right-aligned)
     if Assets.images.linktree then
-        local padding = 5  -- Small padding around the button
-        local buttonWidth = bottomLeftPanelWidth - (padding * 2)
-        local buttonHeight = bottomLeftPanelHeight - (padding * 2)
-        local buttonX = bottomLeftPanelX + padding
-        local buttonY = bottomLeftPanelY + padding
-        local scaleX = buttonWidth / Assets.images.linktree:getWidth()
-        local scaleY = buttonHeight / Assets.images.linktree:getHeight()
+        local linktreeButtonX = bottomLeftPanelX + bottomLeftPanelWidth - buttonSize - 5  -- Right-aligned with padding
+        local linktreeButtonY = bottomLeftPanelY + 5  -- Top padding
+        local linktreeScale = buttonSize / Assets.images.linktree:getWidth()  -- Maintain 1:1 aspect ratio
         
-        love.graphics.draw(Assets.images.linktree, buttonX, buttonY, 0, scaleX, scaleY)
-        
-        -- Draw "Meet the developer" text slightly right of center on the button
-        local text = "Meet the developer"
-        
-        -- Set a larger font size
-        local fontSize = 16
-        local largeFont = love.graphics.newFont(fontSize)
-        love.graphics.setFont(largeFont)
-        
-        local textWidth = largeFont:getWidth(text)
-        local textHeight = largeFont:getHeight()
-        local textX = buttonX + (buttonWidth / 2) - 10  -- Moved slightly to the left from center
-        local textY = buttonY + (buttonHeight / 2) - (textHeight / 2)
-        
-        -- Draw the text in black
-        love.graphics.setColor(0, 0, 0, 1)
-        love.graphics.print(text, textX, textY)
-        
-        -- Reset to default font
-        love.graphics.setFont(love.graphics.getFont())
+        love.graphics.draw(Assets.images.linktree, linktreeButtonX, linktreeButtonY, 0, linktreeScale, linktreeScale)
     end
     
     -- Draw collection popout on top of everything
@@ -369,35 +361,58 @@ local function handleGameClicks(x, y)
     
     -- Check tab clicks first
     if Tabs.mousepressed(x, y, 1, 0, 0, leftPanelWidth, topLeftHeight) then
+        -- Tab was clicked, so clear the settings flag to return to normal tab behavior
+        gameState.showingSettings = false
         return
     end
     
-    -- Check Linktree button click in bottom left panel
+    -- Check Linktree and Settings button clicks in bottom left panel
     local bottomLeftPanelX = 0
     local bottomLeftPanelY = topLeftHeight
     local bottomLeftPanelWidth = leftPanelWidth
     local bottomLeftPanelHeight = bottomLeftHeight
     
-    if Assets.images.linktree then
-        local padding = 5  -- Small padding around the button
-        local buttonWidth = bottomLeftPanelWidth - (padding * 2)
-        local buttonHeight = bottomLeftPanelHeight - (padding * 2)
-        local buttonX = bottomLeftPanelX + padding
-        local buttonY = bottomLeftPanelY + padding
+    -- Calculate button size for 1:1 aspect ratio
+    local buttonSize = bottomLeftPanelHeight - 10  -- Size to fit within the panel with padding
+    
+    -- Check Settings button click (left-aligned)
+    if Assets.images.settingsIcon then
+        local settingsButtonX = bottomLeftPanelX + 5  -- Left padding
+        local settingsButtonY = bottomLeftPanelY + 5  -- Top padding
+        local settingsScale = buttonSize / Assets.images.settingsIcon:getWidth()  -- Maintain 1:1 aspect ratio
+        local settingsButtonWidth = buttonSize
+        local settingsButtonHeight = buttonSize
         
-        if x >= buttonX and x <= buttonX + buttonWidth and y >= buttonY and y <= buttonY + buttonHeight then
+        if x >= settingsButtonX and x <= settingsButtonX + settingsButtonWidth and 
+           y >= settingsButtonY and y <= settingsButtonY + settingsButtonHeight then
+            -- Toggle settings panel visibility
+            gameState.showingSettings = not (gameState.showingSettings or false)
+            return
+        end
+    end
+    
+    -- Check Linktree button click (right-aligned)
+    if Assets.images.linktree then
+        local linktreeButtonX = bottomLeftPanelX + bottomLeftPanelWidth - buttonSize - 5  -- Right-aligned with padding
+        local linktreeButtonY = bottomLeftPanelY + 5  -- Top padding
+        local linktreeScale = buttonSize / Assets.images.linktree:getWidth()  -- Maintain 1:1 aspect ratio
+        local linktreeButtonWidth = buttonSize
+        local linktreeButtonHeight = buttonSize
+        
+        if x >= linktreeButtonX and x <= linktreeButtonX + linktreeButtonWidth and 
+           y >= linktreeButtonY and y <= linktreeButtonY + linktreeButtonHeight then
             -- Open Linktree URL in browser
             love.system.openURL("https://linktr.ee/______sage______")
             return
         end
     end
     
-    -- Handle middle panel clicks based on current tab
+    -- Handle middle panel clicks based on current tab or settings flag
     local currentTab = Tabs.getCurrentTab()
-    if currentTab == "Player" then
-        UI.handlePlayerClick(x, y, leftPanelWidth, 0, middlePanelWidth, screenH)
-    elseif currentTab == "Settings" then
+    if gameState.showingSettings then
         UI.handleSettingsClick(x, y, leftPanelWidth, 0, middlePanelWidth, screenH, gameState, Settings.settings, Assets)
+    elseif currentTab == "Player" then
+        UI.handlePlayerClick(x, y, leftPanelWidth, 0, middlePanelWidth, screenH)
     elseif currentTab == "Collection" then
         require('source.collection').mousepressed(x, y, 1, leftPanelWidth, 0, middlePanelWidth, screenH)
     elseif currentTab == "Inventory" then
@@ -551,7 +566,7 @@ function love.mousemoved(x, y, dx, dy)
     Tabs.mousemoved(x, y, dx, dy, 0, 0, leftPanelWidth, topLeftHeight)
     
     -- Handle settings panel dragging (sliders)
-    if gameState.gameStarted and Tabs.getCurrentTab() == "Settings" then
+    if gameState.gameStarted and gameState.showingSettings then
         UI.handleSettingsMouseMoved(x, y, leftPanelWidth, 0, middlePanelWidth, screenH)
     elseif gameState.gameStarted and Tabs.getCurrentTab() == "Collection" then
         require('source.collection').mousemoved(x, y, dx, dy, leftPanelWidth, 0, middlePanelWidth, screenH)
@@ -586,7 +601,9 @@ function love.wheelmoved(x, y)
     local bottomLeftHeight = leftPanelWidth / 4
     local topLeftHeight = screenH - bottomLeftHeight
     if not Tabs.wheelmoved(x, y, 0, 0, leftPanelWidth, topLeftHeight, mouseX, mouseY) then
-        if gameState.gameStarted and Tabs.getCurrentTab() == "Collection" then
+        if gameState.gameStarted and gameState.showingSettings then
+            -- No wheel events for settings panel
+        elseif gameState.gameStarted and Tabs.getCurrentTab() == "Collection" then
             require('source.collection').wheelmoved(x, y, leftPanelWidth, 0, middlePanelWidth, screenH, mouseX, mouseY)
         elseif gameState.gameStarted and Tabs.getCurrentTab() == "Inventory" then
             require('source.inventory').wheelmoved(x, y, leftPanelWidth, 0, middlePanelWidth, screenH, mouseX, mouseY)
