@@ -22,9 +22,9 @@ Combat
 	- stage bosses
 		- harder bosses on milestone stages (every 10?)
 	- visual style?
-		- first person linear crawler, represent each party member by showing their weapon as a viewmodel on screen
+		- "first person", represent each party member by showing their weapon as a viewmodel on screen (think: og DOOM on a track with no player input and 4-6 weapons)
 		OR	
-		- birds eye full autobattling (simpler to design and understand)
+		- birds eye sidescroller (simpler to design and understand) (see:soda dungeon (also where im taking combat flow from))
 	
 
 Gacha - The core mechanic
