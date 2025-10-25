@@ -6,27 +6,6 @@ character assets
 	- handled by grey & ian
 
 
-Combat
-	- combat zones, zone specific loot, higher level zones with better drops but tougher enemies
-	- 4-6 unit party system, AGI based turn order, go full JRPG
-	- one default attack and an ultimate for each character
-		- default attacks will fall into types (melee, ranged, magic, heal)
-			- use a rock paper scissors system? (magic>ranged>melee>magic (with heal excluded))
-			- intrinsic bonuses to damage types? (ranged=armor piercing, magic=status, melee=bonus crit?, heal=heal)
-		- ultimate attacks should have more variance
-			- attack amount ('1 hit' '2 hits'...)
-			- target amount (...'that hit all enemies' 'that hit random enemies')
-			- buffs (% stat increases/infuse attacks/hp regen/ult regen)
-			- debuffs (status effects/stun/weaken/damage down)
-			- i want ultimates to be like a deciding factor on who you bring into combat
-	- stage bosses
-		- harder bosses on milestone stages (every 10?)
-	- visual style?
-		- "first person", represent each party member by showing their weapon as a viewmodel on screen (think: og DOOM on a track with no player input and 4-6 weapons)
-		OR	
-		- birds eye sidescroller (simpler to design and understand) (see:soda dungeon (also where im taking combat flow from))
-	
-
 Gacha - The core mechanic
 	- totally hands off, no player interaction necessary
 	- summon characters one by one on a loop
@@ -52,6 +31,27 @@ Summon Banners?
 	- Event banners?
 	- Low rarity focus banner?
 
+
+Combat
+	- combat zones, zone specific loot, higher level zones with better drops but tougher enemies
+	- 4-6 unit party system, AGI based turn order, go full JRPG
+	- one default attack and an ultimate for each character
+		- default attacks will fall into types (melee, ranged, magic, heal)
+			- use a rock paper scissors system? (magic>ranged>melee>magic (with heal excluded))
+			- intrinsic bonuses to damage types? (ranged=armor piercing, magic=status, melee=bonus crit?, heal=heal)
+		- ultimate attacks should have more variance
+			- attack amount ('1 hit' '2 hits'...)
+			- target amount (...'that hit all enemies' 'that hit random enemies')
+			- buffs (% stat increases/infuse attacks/hp regen/ult regen)
+			- debuffs (status effects/stun/weaken/damage down)
+			- i want ultimates to be like a deciding factor on who you bring into combat
+	- stage bosses
+		- harder bosses on milestone stages (every 10?)
+	- visual style?
+		- "first person", represent each party member by showing their weapon as a viewmodel on screen (think: og DOOM on a track with no player input and 4-6 weapons)
+		OR	
+		- birds eye sidescroller (simpler to design and understand) (see:soda dungeon (also where im taking combat flow from))
+	
 
 Character Stats
 each character will have combat stats, common RPG things like
