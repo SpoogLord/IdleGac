@@ -1,0 +1,171 @@
+summon animation
+	- in ians hands
+
+
+character assets
+	- handled by grey & ian
+
+
+Combat
+	- combat zones, zone specific loot, higher level zones with better drops but tougher enemies
+	- 4-6 unit party system, AGI based turn order, go full JRPG
+	- one default attack and an ultimate for each character
+		- default attacks will fall into types (melee, ranged, magic, heal)
+			- use a rock paper scissors system? (magic>ranged>melee>magic (with heal excluded))
+			- intrinsic bonuses to damage types? (ranged=armor piercing, magic=status, melee=bonus crit?, heal=heal)
+		- ultimate attacks should have more variance
+			- attack amount ('1 hit' '2 hits'...)
+			- target amount (...'that hit all enemies' 'that hit random enemies')
+			- buffs (% stat increases/infuse attacks/hp regen/ult regen)
+			- debuffs (status effects/stun/weaken/damage down)
+			- i want ultimates to be like a deciding factor on who you bring into combat
+	- stage bosses
+		- harder bosses on milestone stages (every 10?)
+	- visual style?
+		- first person linear crawler, represent each party member by showing their weapon as a viewmodel on screen
+		OR	
+		- birds eye full autobattling (simpler to design and understand)
+	
+
+Gacha - The core mechanic
+	- totally hands off, no player interaction necessary
+	- summon characters one by one on a loop
+	- characters will belong to a rarity and a faction
+	- dif characters will have dif stats and proficiencies
+	- copies will be tracked but not usable as unique characters (can only have one "Joe Long" assigned across all facilities)
+	- combine copies to improve the units stats
+
+Summon Rates
+	- rarity chance
+		- summoning facility
+		- research?
+		- combat progress?
+	- gate higher rarities
+		- research
+		- summon facility?
+		- combat progress?
+		- collection progress?
+
+Summon Banners?
+	- Unique summon animations? (bane of ians mental)
+	- Faction Banners?
+	- Event banners?
+	- Low rarity focus banner?
+
+
+Character Stats
+each character will have combat stats, common RPG things like
+	- STR - Melee Damage
+	- DEX - Crit Chance & Crit Damage
+	- VIT - max HP
+	- CON - Damage Resist
+	- INT - Spell Damage (& other magic stats?)
+	- AGI - Dodge chance & Attack Speed
+	- WIS - Ultimate Charge Rate
+		- prob need to think more about the specifics of these before implementing, maybe modify, add, remove, or consolidate a few
+on draw a character will have their absolute minimum stats, which can be raised by assigning that character to a production method
+certain characters will have stats they are proficient in, giving them a positive mult to that stat and xp in that stat
+certain characters will have stats they are incompetent in, giving them a negative mult to that stat and xp in that stat
+stat caps clamped by rarity(?), multipliers can exceed max
+
+
+Character Proficiencies
+	- certain characters will be have proficiencies
+	- a proficiency is a facility the character gets bonuses in
+	- these apply after stat proficiencies, potentially acting as a second multiplier
+
+
+Facilities
+	- buildings you assign characters to in order to passively produce items and/or level character stats
+Kitchen/Cooking
+	- produces food items
+		- give temp stat buffs to choice characters
+		- use as relationship item
+		- raise agi/dex?
+Smithy/Forging
+	- produces armor/weapons
+	- raise str/dex?
+Training Grounds/Training
+	- purely to raise combat stats
+		- select a stat?
+		- all stats at once?
+		- maybe assign trainers to help other units stats raise faster?
+Farm/Farming
+	- produces crop materials for food items
+		- str/cons?
+		- ..do i need a ranch as a separate facility..?
+Pond/Fishing
+	- produces fish materials for food items as well as random misc items
+		- int/wis?
+Alc.. Alchematory? Alchemy lab?/Alchemy
+	- produces potions?
+		- converts materials from a to b?
+		- dex/int?
+Arcane Workshop/Enchanting (may be a subset of alchemy? imo they can be different enough) (likely scrap idea)
+	- produce upgraded versions of materials? (ex. enchanted iron)
+		- upgrade/augment equipment? (need to conceptualize an equipment system) 
+Laboratory/Research 
+	- "produces" one time upgrades/unlocks to all game systems
+		- units speed up progress rate
+		- int/wis?
+		- likely the slowest progressing mechanic as a sort of progress limiter
+Summoning Glyph? Summoning Ritual?/Summoning
+	- apply bonuses to summoning
+		- summon rate, summon odds, chance to bonus summon?
+		- idfk vit/cons? make it a blood sacrifice?
+Caravan/Trading
+	- probably the standard 'expedition' system
+		- send units on 1-2 hr journeys to exchange money for resource, resource for resource, or resource for money
+		- units would be unusable during this time unless cancelling the expedition and recieving no rewards
+		- would be the only system justifying a charisma stat
+
+
+additional mechanics
+Factions
+	- production bonuses for assigning same faction units to production facilities
+	- combat bonuses for teaming up same faction units
+	- faction focus banners?
+Carnival?
+	- rotating minigames as a kind of daily login bonus
+		- would be a place to put Basketball
+Basketball
+	- coded, but why
+	- need to fix some collision stuff
+	- rewards? purpose?
+	- sorta wanna put a character in the shooting area that reacts to the player moving the ball as if they are the player? like show them prepare to shoot when the player is moving the ball?
+Pizzeria
+	- might have to be closer to club penguins pizzeria sim bc i do not wanna have to code physics.
+		- maybe a subset of the cooking mechanic
+..chess?
+	- i dont even know how i would begin to code that..
+Relationships
+	- low level dating sim to provide stat bonuses to choice units. 
+		- daily limit to interactions, hard cap to relationship bonus
+		- maybe a relationship decay if interactions spent on other units? but do not prevent the player from maxing all relationships. 
+
+
+Story?
+	- plot idea 1: a bit like a city revival game? start by setting up infrastructure for a city (farming, cooking, fishing) then unlock combat/fantasy progression later in the game? maybe a story about rebuilding a destoryed town?
+		- almost sounds like the plot of a shitty mobile game ad. mechanically sounds like it could be cool tho
+	- plot idea 2: really lazy 'oh hey i found this phone that lets me be god' type plot
+		- parodizes stuff like FGO, but might be an instant turnoff for some people
+	- plot idea 3: no explicit plot, just gameplay with optional lore text for those that choose to interact with it
+		- a little boring i guess, but also most people dont tend to care about gacha/idle game plot
+
+
+Offline Progress
+offline rates half of online
+	- prevent rolling new characters while offline
+
+
+Rarities
+Common - white - #fff
+Uncommon - forest green - #005f1e
+Rare - dark blue - #00278e
+Epic - soft purple - #44008e
+Legendary - bright purple - #a700ff
+Mythic - bright blue - #0045ff
+Ascendant - baby blue - #00b6ff
+Superior - yellow - #eaff00
+Ultimate - orange - #ffae00
+Deific - red - #f00
